@@ -55,11 +55,11 @@ def lect():
 
 def tri():
     with open('data.txt', encoding='utf-8') as f:
-        lines = f.readlines()  # Lire toutes les lignes du fichier
+        lignes = f.readlines()  # Lire toutes les lignes du fichier
 
     # Transformer les données en une liste d'objets
     objets = []
-    for line in lines:
+    for line in lignes:
         infos = line.strip().split(',')  # Supprimer les espaces et couper par virgules
         name = infos[0]
         price = int(infos[1])
