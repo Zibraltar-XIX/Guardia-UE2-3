@@ -1,5 +1,6 @@
 import os
 import pandas as pd
+cookie_username = None
 
 def cls():
     os.system('cls' if os.name == 'nt' else 'clear')
@@ -166,7 +167,7 @@ def user_menu():
         cls()
         logo()
         print("Press 1 to log in")
-        print("Press 2 to sign in")
+        print("Press 2 to register")
         print("Press 3 to view account details")
         print("Press 4 to modify account details")
         print("Press 5 to delete account")
@@ -186,15 +187,15 @@ def user_menu():
             continue
 
         if x == 1:
-            user_menu()
+            login()
         elif x == 2:
-            sign_in()
+            register()
         elif x == 3:
-            user_menu()
+            account_det()
         elif x == 4:
             user_menu()
         elif x == 5:
-            user_menu()
+            user_del()
         elif x == 6: #the best hidden option lol
             list_user()
         else:
@@ -207,7 +208,7 @@ def list_user():
     print(database)
     input("\n\nEnter to continue...")
 
-def sign_in():
+def register():
     cls()
     logo()
     username = input("Enter your username : ")
@@ -231,17 +232,13 @@ def sign_in():
             break
 
         elif entry == "y":
-            # Chemin du fichier CSV
             file_path = 'users.csv'
 
             try:
-                # Charger le fichier existant
                 df = pd.read_csv(file_path, encoding='utf-8')
             except FileNotFoundError:
-                # Créer un nouveau DataFrame si le fichier n'existe pas
                 df = pd.DataFrame(columns=['USERNAME', 'PASSWORD', 'DESCRIPTION', 'PHONE'])
 
-            # Nouvelle ligne sous forme de DataFrame
             new_row = pd.DataFrame([{
                 'USERNAME': username,
                 'PASSWORD': password,
@@ -249,18 +246,85 @@ def sign_in():
                 'PHONE': phone
             }])
 
-            # Ajouter la nouvelle ligne au DataFrame
             df = pd.concat([df, new_row], ignore_index=True)
 
-            # Sauvegarder dans le fichier CSV
             df.to_csv(file_path, index=False, encoding='utf-8')
             print("Account saved successfully.")
             input("Press Enter to continue...")
-            break  # Sortir de la boucle après avoir sauvegardé
+            break
 
         elif entry == "n":
-            print("Please modify your input.")
+            register()
         else:
             print("Type y for yes, n for no and modify, or q to return to user menu.")
+
+def login():
+    global cookie_username
+    cls()
+    logo()
+    file_path = 'users.csv'
+    username = input("Enter your username: ")
+    cls()
+    logo()    
+
+    try:
+        df = pd.read_csv(file_path, encoding='utf-8')
+    except FileNotFoundError:
+        print("User database not found!")
+        return
+
+    user_found = df[df['USERNAME'] == username]
+
+    if user_found.empty:
+        print("Username not found!")
+        return
+
+    password = input("Enter your password: ")
+    cls()
+    logo()
+
+    if user_found.iloc[0]['PASSWORD'] == password:
+        cookie_username = username
+        print("Login successful!")
+        input("\n\nPress Enter to continue...")
+    else:
+        print("Incorrect password!")
+        return
+
+def account_det():
+    file_path = 'users.csv'
+    
+    try:
+        df = pd.read_csv(file_path, encoding='utf-8')
+    except FileNotFoundError:
+        print("User database not found!")
+        return
+
+    user_found = df[df['USERNAME'] == cookie_username]
+
+    if user_found.empty:
+        cls()
+        logo()
+        print("No account information found for the logged-in user.")
+        input("\n\nEnter to continue...")
+        return
+
+    account = user_found.iloc[0]['USERNAME']
+    psword = user_found.iloc[0]['PASSWORD']
+    desc = user_found.iloc[0]['DESCRIPTION']
+    phone = user_found.iloc[0]['PHONE']
+
+    cls()
+    logo()
+    print(f"Account : {account}\nPassword : {psword}\nDescription : {desc}\nPhone number : {phone}")
+    input("\n\nPress Enter to continue...")
+
+def user_del():
+    file_path = 'users.csv'
+    df = pd.read_csv(file_path, encoding='utf-8')
+    df = df[df['USERNAME'] != cookie_username]
+    df.to_csv(file_path, index=False, encoding='utf-8')
+    print(f"User '{cookie_username}' has been successfully deleted.")
+    input("Enter to continue...")
 
 main_menu()
