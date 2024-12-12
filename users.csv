@@ -1,0 +1,4 @@
+USERNAME,PASSWORD,DESCRIPTION,PHONE
+Admin,root,Best of the admin,0,
+User,1234,Random guy,101010101
+Guest,guest,For the guest,202020202
