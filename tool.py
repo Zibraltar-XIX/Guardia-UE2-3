@@ -31,36 +31,27 @@ def main_menu():
             continue
 
         if x == 1:
-            lect()
+            lect_csv()
         elif x == 2:
             tri()
         elif x == 3:
-            add()
+            add_csv()
         elif x == 4:
-            supr()
+            supr_csv()
         elif x == 5:
-            recherche()
+            recherche_csv()
         elif x == 6:
             user_menu()
         else:
             print("Invalid option. Please select a valid choice.")
 
-def lect():
+def lect_csv():
     cls()
-    with open('data.txt', encoding='utf-8') as f:
-        data = f.read()
-        datas = data.split('\n')
-        print("==========================")
-        for produit in datas:
-            infos = produit.split(',')
-            produit = infos[0]
-            prix = infos[1]
-            description = infos[2]
-            print("Nom :", produit)
-            print("Prix :", prix, "euro")
-            print("Stock :", description)
-            print("-------------------------")
-        input("Enter to continue...")
+    logo()
+    file_path = 'data.csv'
+    df = pd.read_csv(file_path, encoding='utf-8')
+    print("Aperçu des données :\n\n", df.head())
+    input("\n\nEnter to continue...")
 
 def tri():
     cls()
@@ -101,16 +92,78 @@ def tri():
         print(f"Stock: {item[2]}")
         print("--------------------------")
 
-def add():
-    cls()
-    with open('data.txt', 'a', encoding='utf-8') as f:
-        name = input("Enter your new item name : ")
-        price = int(input("Enter the price of the item : "))
-        stock = int(input("Enter the number of items : "))
-        f.write("\n" + name + ", " + str(price) + ", " + str(stock))
-        print("-------------------------")
+def add_csv():
+    #Load the csv
+    file_path = 'data.csv'
+    df = pd.read_csv(file_path, encoding='utf-8')
 
-def supr():
+    #Empty value for the user
+    product = ''
+    price = ''
+    stock = ''
+
+    while product == '':
+        cls()
+        logo()
+        product = input("Enter your product's name : ")
+        verif = df[df['OBJECT'] == product]
+        if verif.empty:
+            product = product
+        else :
+            input("Product already exist, sorry.\n\nEnter to try an other one...")
+            product = ''
+
+    while price == '':
+        cls()
+        logo()
+        price = input("Enter product's price : ")
+
+    while stock == '':
+        cls()
+        logo()
+        stock = input("Enter the stock of this product : ")
+        if stock == "0":
+            stock = "Out of stock !"
+
+    cls()
+    logo()
+    print("Résumé (a traduire) :\n")
+    print("Product name : ", product, "\nPrice : ", price, "$\nStock : ", stock)
+    
+    while True:
+        entry = input("\nThis is correct ? (y/n/q) : ")
+        if entry == "q":
+            break
+
+        elif entry == "y":
+            file_path = 'data.csv'
+
+            try:
+                df = pd.read_csv(file_path, encoding='utf-8')
+            except FileNotFoundError:
+                df = pd.DataFrame(columns=['OBJECT', 'PRICE', 'STOCK'])
+
+            new_row = pd.DataFrame([{
+                'OBJECT': product,
+                'PRICE': price,
+                'STOCK': stock,
+            }])
+
+            df = pd.concat([df, new_row], ignore_index=True)
+
+            df.to_csv(file_path, index=False, encoding='utf-8')
+            cls()
+            logo()
+            print("Product saved successfully.")
+            input("\n\nPress Enter to continue...")
+            break
+
+        elif entry == "n":
+            main_menu()
+        else:
+            print("Type y for yes, n for no and modify, or q to return to user menu.")
+
+
     cls()
     with open('data.txt', 'r', encoding='utf-8') as f:
         lignes = f.readlines()
@@ -142,7 +195,7 @@ def supr():
         print("Please enter a valid number.")
         print("-------------------------")
 
-def recherche():
+
     with open('data.txt', encoding='utf-8') as f:
         data = f.read()
         datas = data.split('\n')
@@ -160,7 +213,48 @@ def recherche():
                 print("-------------------------")
         input("Enter to continue...")
         cls()
-    
+
+def supr_csv():
+    file_path = 'data.csv'
+    df = pd.read_csv(file_path, encoding='utf-8')
+    colonne = 'OBJECT'
+    cls()
+    logo()
+    print("Aperçu des données :\n\n", df)
+    x = int(input("\n\nEnter the number of the product you want to remove : "))
+    product = df.iloc[x][colonne]
+    df = df.drop(index=x)
+    df.to_csv(file_path, index=False, encoding='utf-8')
+    cls()
+    logo()
+    print(product,"has been successfully deleted.")
+    input("\n\nEnter to continue...")
+
+def recherche_csv():
+    cls()
+    logo()
+    file_path = 'data.csv'
+    try:
+        df = pd.read_csv(file_path, encoding='utf-8')
+    except Exception as e:
+        print("Erreur lors du chargement du fichier CSV :", e)
+        input("\n\nEnter to continue...")
+        return
+    search = input("Enter the product name : ")
+    object_found = df[df['OBJECT'] == search]
+    if object_found.empty:
+        cls()
+        logo()
+        input("Product not found, sorry.\n\nEnter to continue...")
+        return
+    cls()
+    logo()
+    product = object_found.iloc[0]['OBJECT']
+    price = object_found.iloc[0]['PRICE']
+    stock = object_found.iloc[0]['STOCK']
+    print("Product name : ", product, "\nPrice : ", price, "$\nStock : ", stock)
+    input("\n\nEnter to continue")
+
 def user_menu():
     while True:
         cls()
