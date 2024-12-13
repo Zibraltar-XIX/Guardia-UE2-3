@@ -1,6 +1,5 @@
 import os
 import pandas as pd
-cookie_username = None
 
 def cls():
     os.system('cls' if os.name == 'nt' else 'clear')
@@ -193,7 +192,7 @@ def user_menu():
         elif x == 3:
             account_det()
         elif x == 4:
-            user_menu()
+            user_modif()
         elif x == 5:
             user_del()
         elif x == 6: #the best hidden option lol
@@ -209,18 +208,50 @@ def list_user():
     input("\n\nEnter to continue...")
 
 def register():
-    cls()
-    logo()
-    username = input("Enter your username : ")
-    cls()
-    logo()
-    password = input("Enter your password : ")
-    cls()
-    logo()
-    description = input("Enter the description of this account : ")
-    cls()
-    logo()
-    phone = input("Enter your phone number : ")
+    #Load the csv
+    file_path = 'users.csv'
+    df = pd.read_csv(file_path, encoding='utf-8')
+
+    #Empty value for the user
+    username = ''
+    password = ''
+    description = ''
+    phone = ''
+
+    while username == '':
+        cls()
+        logo()
+        username = input("Enter your username : ")
+        verif = df[df['USERNAME'] == username]
+        if verif.empty:
+            username = username
+        else :
+            input("Username already exist, sorry.\n\nEnter to try an other one...")
+            username = ''
+
+    while password == '':
+        cls()
+        logo()
+        password = input("Enter your password : ")
+
+    while description == '':
+        cls()
+        logo()
+        description = input("Enter the description of this account : ")
+        if description == '':
+            description = "Nothing here !"
+        else :
+            break
+    
+    while phone == '':
+        cls()
+        logo()
+        phone = input("Enter your phone number : ")
+        if phone == '':
+            phone = "Nothing here !"
+        else :
+            break
+
     cls()
     logo()
     print("Résumé (a traduire) :\n")
@@ -249,8 +280,10 @@ def register():
             df = pd.concat([df, new_row], ignore_index=True)
 
             df.to_csv(file_path, index=False, encoding='utf-8')
+            cls()
+            logo()
             print("Account saved successfully.")
-            input("Press Enter to continue...")
+            input("\n\nPress Enter to continue...")
             break
 
         elif entry == "n":
@@ -289,7 +322,7 @@ def login():
         input("\n\nPress Enter to continue...")
     else:
         print("Incorrect password!")
-        return
+        input("Enter to continue...")
 
 def account_det():
     file_path = 'users.csv'
@@ -324,7 +357,55 @@ def user_del():
     df = pd.read_csv(file_path, encoding='utf-8')
     df = df[df['USERNAME'] != cookie_username]
     df.to_csv(file_path, index=False, encoding='utf-8')
+    cls()
+    logo()
     print(f"User '{cookie_username}' has been successfully deleted.")
-    input("Enter to continue...")
+    input("\n\nEnter to continue...")
+
+def user_modif():
+    file_path = 'users.csv'
+    df = pd.read_csv(file_path, encoding='utf-8')
+    while True:
+        cls()
+        logo()
+        print("Press 1 to modify username")
+        print("Press 2 to modify password")
+        print("Press 3 to modify description")
+        print("Press 4 to modify phone number")
+        print("Press q to quit")
+        
+        choice = input("\nEnter your choice: ")
+        
+        if choice == "q":
+            break
+        
+        try:
+            x = int(choice)
+        except ValueError:
+            print("Invalid input! Please enter a number or 'q' to quit.")
+            continue
+
+        if x == 1:
+            jsp = "USERNAME"
+            phrase = "username : "
+        elif x == 2:
+            jsp = "PASSWORD"
+            phrase = "password : "
+        elif x == 3:
+            jsp = "DESCRIPTION"
+            phrase = "description : "
+        elif x == 4:
+            jsp = "PHONE"
+            phrase = "phone number : "
+        else:
+            print("Invalid option. Please select a valid choice.")
+
+        modif = ''
+        while modif == '':
+            modif = input("Enter the new " + phrase)
+            df.loc[df['USERNAME'] == cookie_username, jsp] = modif
+
+        df.to_csv(file_path, index=False, encoding='utf-8')
+        print("Password updated successfully!")
 
 main_menu()
