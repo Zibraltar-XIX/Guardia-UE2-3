@@ -1,12 +1,14 @@
 import os
 import pandas as pd
 
+#Tools
 def cls():
     os.system('cls' if os.name == 'nt' else 'clear')
 
 def logo():
     print(" __________________________________________________\n|                                                  |\n|     /$$$$$$$$                  /$$               |\n|    |__  $$__/                 | $$               |\n|       | $$  /$$$$$$   /$$$$$$ | $$  /$$$$$$$     |\n|       | $$ /$$__  $$ /$$__  $$| $$ /$$_____/     |\n|       | $$| $$  \ $$| $$  \ $$| $$|  $$$$$$      |\n|       | $$| $$  | $$| $$  | $$| $$ \____  $$     |\n|       | $$|  $$$$$$/|  $$$$$$/| $$ /$$$$$$$/     |\n|       |__/ \______/  \______/ |__/|_______/      |\n|                                                  |\n'=================================================='\n\n")
 
+#Main menu
 def main_menu():
     while True:
         cls()
@@ -31,21 +33,21 @@ def main_menu():
             continue
 
         if x == 1:
-            lect_csv()
+            lect()
         elif x == 2:
             tri()
         elif x == 3:
-            add_csv()
+            add()
         elif x == 4:
-            supr_csv()
+            supr()
         elif x == 5:
-            recherche_csv()
+            recherche()
         elif x == 6:
             user_menu()
         else:
             print("Invalid option. Please select a valid choice.")
 
-def lect_csv():
+def lect():
     cls()
     logo()
     file_path = 'data.csv'
@@ -55,44 +57,33 @@ def lect_csv():
 
 def tri():
     cls()
-    with open('data.txt', encoding='utf-8') as f:
-        lignes = f.readlines()
+    logo()
+    file_path = 'data.csv'
+    df = pd.read_csv(file_path, encoding='utf-8')
+    print("How do you want to sort the items ?\n1: By price\n2: By stock")
+    choice = input("\n\nEnter your choice (1 or 2): ")
 
-    objets = []
-    for line in lignes:
-        infos = line.strip().split(',')  # Supprimer les espaces et couper par virgules
-        name = infos[0]
-        price = int(infos[1])
-        stock = int(infos[2])
-        objets.append([name, price, stock])
-
-    print("How do you want to sort the items?")
-    print("1: By price")
-    print("2: By stock")
-    choice = input("Enter your choice (1 or 2): ")
-
-    # Trier manuellement par prix
     if choice == "1":
-        for i in range(len(objets)):
-            for j in range(len(objets) - 1):
-                if objets[j][1] > objets[j + 1][1]:  # Comparer les prix
-                    objets[j], objets[j + 1] = objets[j + 1], objets[j]
-    
-    # Trier manuellement par stock
+        df = df.sort_values(by='PRICE', ascending=True)
+        cls()
+        logo()
+        print("Données triées par prix :\n\n", df)
+        input("\n\nEnter to continue...")
+
     elif choice == "2":
-        for i in range(len(objets)):
-            for j in range(len(objets) - 1):
-                if objets[j][2] > objets[j + 1][2]:  # Comparer les stocks
-                    objets[j], objets[j + 1] = objets[j + 1], objets[j]
+        df = df.sort_values(by='STOCK', ascending=True)
+        cls()
+        logo()
+        print("Données triées par prix :\n\n", df)
+        input("\n\nEnter to continue...")
 
-    print("==========================")
-    for item in objets:
-        print(f"Name: {item[0]}")
-        print(f"Price: {item[1]} euro")
-        print(f"Stock: {item[2]}")
-        print("--------------------------")
+    else :
+        cls()
+        logo()
+        print("Bad choice !")
+        input("\n\nEnter to continue...")
 
-def add_csv():
+def add():
     #Load the csv
     file_path = 'data.csv'
     df = pd.read_csv(file_path, encoding='utf-8')
@@ -214,7 +205,7 @@ def add_csv():
         input("Enter to continue...")
         cls()
 
-def supr_csv():
+def supr():
     file_path = 'data.csv'
     df = pd.read_csv(file_path, encoding='utf-8')
     colonne = 'OBJECT'
@@ -230,7 +221,7 @@ def supr_csv():
     print(product,"has been successfully deleted.")
     input("\n\nEnter to continue...")
 
-def recherche_csv():
+def recherche():
     cls()
     logo()
     file_path = 'data.csv'
@@ -255,6 +246,7 @@ def recherche_csv():
     print("Product name : ", product, "\nPrice : ", price, "$\nStock : ", stock)
     input("\n\nEnter to continue")
 
+#User menu
 def user_menu():
     while True:
         cls()
