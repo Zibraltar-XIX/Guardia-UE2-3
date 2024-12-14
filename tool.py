@@ -1,5 +1,7 @@
 import os
 import pandas as pd
+import hashlib
+import secrets
 
 #Tools
 def cls():
@@ -256,6 +258,7 @@ def user_menu():
         print("Press 3 to view account details")
         print("Press 4 to modify account details")
         print("Press 5 to delete account")
+        print("Press 6 to log out")
         print("Press q to quit")
         
         choice = input("\nEnter your choice: ")
@@ -281,7 +284,9 @@ def user_menu():
             user_modif()
         elif x == 5:
             user_del()
-        elif x == 6: #the best hidden option lol
+        elif x == 6:
+            logout()
+        elif x == 7: #the best hidden option lol
             list_user()
         else:
             print("Invalid option. Please select a valid choice.")
@@ -319,6 +324,11 @@ def register():
         cls()
         logo()
         password = input("Enter your password : ")
+        salt = secrets.token_hex(16)
+        password_salted = salt+password
+        hashpassword = hashlib.sha512(password_salted.encode()).hexdigest()
+        print("Salt : ",salt,"\nPassword : ",password,"\nSalted password : ",password_salted,"\nHash : ",hashpassword)
+        input()
 
     while description == '':
         cls()
@@ -354,11 +364,12 @@ def register():
             try:
                 df = pd.read_csv(file_path, encoding='utf-8')
             except FileNotFoundError:
-                df = pd.DataFrame(columns=['USERNAME', 'PASSWORD', 'DESCRIPTION', 'PHONE'])
+                df = pd.DataFrame(columns=['USERNAME', 'PASSWORD','SALT', 'DESCRIPTION', 'PHONE'])
 
             new_row = pd.DataFrame([{
                 'USERNAME': username,
-                'PASSWORD': password,
+                'PASSWORD': hashpassword,
+                'SALT' : salt,
                 'DESCRIPTION': description,
                 'PHONE': phone
             }])
@@ -399,10 +410,13 @@ def login():
         return
 
     password = input("Enter your password: ")
+    salt = user_found.iloc[0]['SALT']
+    password_salted = salt+password
+    hashpassword = hashlib.sha512(password_salted.encode()).hexdigest()
     cls()
     logo()
 
-    if user_found.iloc[0]['PASSWORD'] == password:
+    if user_found.iloc[0]['PASSWORD'] == hashpassword:
         cookie_username = username
         print("Login successful!")
         input("\n\nPress Enter to continue...")
@@ -424,7 +438,7 @@ def account_det():
     if user_found.empty:
         cls()
         logo()
-        print("No account information found for the logged-in user.")
+        print("You are not log in.")
         input("\n\nEnter to continue...")
         return
 
@@ -435,7 +449,7 @@ def account_det():
 
     cls()
     logo()
-    print(f"Account : {account}\nPassword : {psword}\nDescription : {desc}\nPhone number : {phone}")
+    print(f"Account : {account}\nPassword's hash : {psword}\nDescription : {desc}\nPhone number : {phone}")
     input("\n\nPress Enter to continue...")
 
 def user_del():
@@ -451,6 +465,13 @@ def user_del():
 def user_modif():
     file_path = 'users.csv'
     df = pd.read_csv(file_path, encoding='utf-8')
+    if cookie_username == '':
+        cls()
+        logo()
+        print("You are not log in.")
+        input("\n\nEnter to continue...")
+        return
+    
     while True:
         cls()
         logo()
@@ -475,8 +496,21 @@ def user_modif():
             jsp = "USERNAME"
             phrase = "username : "
         elif x == 2:
-            jsp = "PASSWORD"
-            phrase = "password : "
+            cls()
+            logo()
+            password = input("Enter your password : ")
+            salt = secrets.token_hex(16)
+            password_salted = salt+password
+            hashpassword = hashlib.sha512(password_salted.encode()).hexdigest()
+            df.loc[df['USERNAME'] == cookie_username, 'PASSWORD'] = hashpassword
+            df.loc[df['USERNAME'] == cookie_username, 'SALT'] = salt
+            df.to_csv(file_path, index=False, encoding='utf-8')
+            cls()
+            logo()
+            print("Account updated successfully!")
+            input("\n\nEnter to continue...")
+            break
+
         elif x == 3:
             jsp = "DESCRIPTION"
             phrase = "description : "
@@ -492,6 +526,14 @@ def user_modif():
             df.loc[df['USERNAME'] == cookie_username, jsp] = modif
 
         df.to_csv(file_path, index=False, encoding='utf-8')
-        print("Password updated successfully!")
+        print("Account updated successfully!")
 
+def logout():
+    cls()
+    logo()
+    global cookie_username
+    input(f"You have been log out of {cookie_username}.\n\nEnter to continue...")
+    cookie_username = ''
+
+cookie_username = ''
 main_menu()
