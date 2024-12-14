@@ -329,8 +329,11 @@ def register():
         for i in range(nb_rows):
             verif = leaks.iloc[i]['PASSWORD']
             if verif == password:
-                input("The password is present on web leaks. Choose a better password,\nmore info here : https://www.cisa.gov/secure-our-world/use-strong-passwords .\n\nEnter to try an other one...")
-                password = ''
+                rep = input("The password is present on web leaks. Choose a better password, more info here :\nhttps://www.cisa.gov/secure-our-world/use-strong-passwords .\n\nDo you want to force this password ? (y or else) : ")
+                if rep == "y":
+                    password = password
+                else :
+                    password = ''
             else:
                 salt = secrets.token_hex(16)
                 password_salted = salt+password
