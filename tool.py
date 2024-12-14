@@ -323,12 +323,18 @@ def register():
     while password == '':
         cls()
         logo()
+        leaks = pd.read_csv('leaks.csv', encoding='utf-8')
+        nb_rows = len(leaks)
         password = input("Enter your password : ")
-        salt = secrets.token_hex(16)
-        password_salted = salt+password
-        hashpassword = hashlib.sha512(password_salted.encode()).hexdigest()
-        print("Salt : ",salt,"\nPassword : ",password,"\nSalted password : ",password_salted,"\nHash : ",hashpassword)
-        input()
+        for i in range(nb_rows):
+            verif = leaks.iloc[i]['PASSWORD']
+            if verif == password:
+                input("The password is present on web leaks. Choose a better password,\nmore info here : https://www.cisa.gov/secure-our-world/use-strong-passwords .\n\nEnter to try an other one...")
+                password = ''
+            else:
+                salt = secrets.token_hex(16)
+                password_salted = salt+password
+                hashpassword = hashlib.sha512(password_salted.encode()).hexdigest()
 
     while description == '':
         cls()
@@ -534,6 +540,9 @@ def logout():
     global cookie_username
     input(f"You have been log out of {cookie_username}.\n\nEnter to continue...")
     cookie_username = ''
+
+def leaks_to_email():
+    input("Fonction is on construct, wait.")
 
 cookie_username = ''
 main_menu()
