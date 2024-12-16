@@ -2,6 +2,8 @@ import os
 import pandas as pd
 import hashlib
 import secrets
+import smtplib
+from email.message import EmailMessage
 
 #Tools
 def cls():
@@ -259,6 +261,10 @@ def user_menu():
         print("Press 4 to modify account details")
         print("Press 5 to delete account")
         print("Press 6 to log out")
+        if cookie_username == "Admin":
+            print("Press 7 to check password leaks for all users")
+        if cookie_username == "Admin":
+            print("Press 8 to list all users")
         print("Press q to quit")
         
         choice = input("\nEnter your choice: ")
@@ -286,7 +292,9 @@ def user_menu():
             user_del()
         elif x == 6:
             logout()
-        elif x == 7: #the best hidden option lol
+        elif x == 7 and cookie_username == "Admin":
+            leaks_to_email()
+        elif x == 8 and cookie_username == "Admin":
             list_user()
         else:
             print("Invalid option. Please select a valid choice.")
@@ -307,7 +315,7 @@ def register():
     username = ''
     password = ''
     description = ''
-    phone = ''
+    mail = ''
 
     while username == '':
         cls()
@@ -348,19 +356,19 @@ def register():
         else :
             break
     
-    while phone == '':
+    while mail == '':
         cls()
         logo()
-        phone = input("Enter your phone number : ")
-        if phone == '':
-            phone = "Nothing here !"
-        else :
-            break
+        mail = input("Enter your email : ")
+        if mail == '':
+            cls()
+            logo()
+            input("You need enter a valid email.\n\nEnter to try again...")
 
     cls()
     logo()
     print("Résumé (a traduire) :\n")
-    print("Username : ", username, "\nPassword : ", password, "\nDescription : ", description, "\nPhone number : ", phone)
+    print("Username : ", username, "\nPassword : ", password, "\nDescription : ", description, "\nEmail : ", mail)
     
     while True:
         entry = input("\nThis is correct ? (y/n/q) : ")
@@ -373,14 +381,14 @@ def register():
             try:
                 df = pd.read_csv(file_path, encoding='utf-8')
             except FileNotFoundError:
-                df = pd.DataFrame(columns=['USERNAME', 'PASSWORD','SALT', 'DESCRIPTION', 'PHONE'])
+                df = pd.DataFrame(columns=['USERNAME', 'PASSWORD','SALT', 'DESCRIPTION', 'MAIL'])
 
             new_row = pd.DataFrame([{
                 'USERNAME': username,
                 'PASSWORD': hashpassword,
                 'SALT' : salt,
                 'DESCRIPTION': description,
-                'PHONE': phone
+                'MAIL': mail
             }])
 
             df = pd.concat([df, new_row], ignore_index=True)
@@ -454,11 +462,11 @@ def account_det():
     account = user_found.iloc[0]['USERNAME']
     psword = user_found.iloc[0]['PASSWORD']
     desc = user_found.iloc[0]['DESCRIPTION']
-    phone = user_found.iloc[0]['PHONE']
+    mail = user_found.iloc[0]['MAIL']
 
     cls()
     logo()
-    print(f"Account : {account}\nPassword's hash : {psword}\nDescription : {desc}\nPhone number : {phone}")
+    print(f"Account : {account}\nPassword's hash : {psword}\nDescription : {desc}\nEmail : {mail}")
     input("\n\nPress Enter to continue...")
 
 def user_del():
@@ -487,7 +495,7 @@ def user_modif():
         print("Press 1 to modify username")
         print("Press 2 to modify password")
         print("Press 3 to modify description")
-        print("Press 4 to modify phone number")
+        print("Press 4 to modify email")
         print("Press q to quit")
         
         choice = input("\nEnter your choice: ")
@@ -524,8 +532,8 @@ def user_modif():
             jsp = "DESCRIPTION"
             phrase = "description : "
         elif x == 4:
-            jsp = "PHONE"
-            phrase = "phone number : "
+            jsp = "MAIL"
+            phrase = "Email : "
         else:
             print("Invalid option. Please select a valid choice.")
 
@@ -545,7 +553,46 @@ def logout():
     cookie_username = ''
 
 def leaks_to_email():
-    input("Fonction is on construct, wait.")
+    cls()
+    logo()
+    print("Password check loading...")
+    leaks = pd.read_csv('leaks.csv', encoding='utf-8')
+    users = pd.read_csv('users.csv', encoding='utf-8')
+    leaks_rows = len(leaks)
+    users_rows = len(users)
+    for i in range(users_rows):
+        for j in range(leaks_rows):
+            verif = leaks.iloc[j]['PASSWORD']
+            password = users.iloc[i]['PASSWORD']
+            email = users.iloc[i]['MAIL']
+            user = users.iloc[i]['USERNAME']
+            salt = users.iloc[i]['SALT']
+            verif = salt+verif
+            verif = hashlib.sha512(verif.encode()).hexdigest()
+            if verif == password:
+                # Configuration
+                admin_email = 'contact@zibraltar.fr'
+                email_password = 'z3qlPzjkqWh9IPVLjh821w'
+                to_email = email
+                subject = 'Security Alert'
+                body = f"Hello {user},\nYour password has leaked on the internet!\nYou need to change it now."
+
+                # Création du message
+                msg = EmailMessage()
+                msg['From'] = admin_email
+                msg['To'] = to_email
+                msg['Subject'] = subject
+                msg.set_content(body)
+
+                # Envoi de l'email
+                server = smtplib.SMTP('127.0.0.1', 1025)
+                server.starttls()
+                server.login(admin_email, email_password)
+                server.send_message(msg)
+                server.quit()
+    cls()
+    logo()
+    input("Password check finish, enter to continue...")
 
 cookie_username = ''
 main_menu()
