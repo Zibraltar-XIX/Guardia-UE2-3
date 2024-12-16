@@ -4,6 +4,7 @@ import hashlib
 import secrets
 import smtplib
 from email.message import EmailMessage
+import re
 
 #Tools
 def cls():
@@ -359,11 +360,16 @@ def register():
     while mail == '':
         cls()
         logo()
-        mail = input("Enter your email : ")
+        mail = input("Enter your email : ").strip()
         if mail == '':
             cls()
             logo()
             input("You need enter a valid email.\n\nEnter to try again...")
+        if not is_valid_email(mail):
+            cls()
+            logo()
+            mail = ''
+            input("You need to enter a valid email.\n\nPress Enter to try again...")
 
     cls()
     logo()
@@ -593,6 +599,10 @@ def leaks_to_email():
     cls()
     logo()
     input("Password check finish, enter to continue...")
+
+def is_valid_email(email):
+    email_regex = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+    return re.match(email_regex, email) is not None
 
 cookie_username = ''
 main_menu()
