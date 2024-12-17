@@ -52,23 +52,38 @@ def main_menu():
         else:
             print("Invalid option. Please select a valid choice.")
 
-def lect():
+def lect(): 
     cls()
     logo()
+    if cookie_username == '':
+        input("You are not log in.\n\nEnter to continue...")
+        return
     file_path = 'data.csv'
     df = pd.read_csv(file_path, encoding='utf-8')
-    print("Aperçu des données :\n\n", df.head())
+    data_len = len(df)
+    for i in range(data_len):
+        if df.iloc[i]['OWNER'] == cookie_username:
+            product = df.iloc[i]['OBJECT']
+            price = df.iloc[i]['PRICE']
+            stock = df.iloc[i]['STOCK']
+            print(f"\nProduct : {product}\nPrice : {price}\nStock : {stock}")
+            print("\n=======================================")
+
     input("\n\nEnter to continue...")
 
 def tri():
     cls()
     logo()
+    if cookie_username == '':
+        input("You are not log in.\n\nEnter to continue...")
+        return
     file_path = 'data.csv'
     df = pd.read_csv(file_path, encoding='utf-8')
     print("How do you want to sort the items ?\n1: By price\n2: By stock")
     choice = input("\n\nEnter your choice (1 or 2): ")
 
     if choice == "1":
+        df = df[df['OWNER'] == cookie_username]
         df = df.sort_values(by='PRICE', ascending=True)
         cls()
         logo()
@@ -76,6 +91,7 @@ def tri():
         input("\n\nEnter to continue...")
 
     elif choice == "2":
+        df = df[df['OWNER'] == cookie_username]
         df = df.sort_values(by='STOCK', ascending=True)
         cls()
         logo()
@@ -89,6 +105,9 @@ def tri():
         input("\n\nEnter to continue...")
 
 def add():
+    if cookie_username == '':
+        input("You are not log in.\n\nEnter to continue...")
+        return
     #Load the csv
     file_path = 'data.csv'
     df = pd.read_csv(file_path, encoding='utf-8')
@@ -143,6 +162,7 @@ def add():
                 'OBJECT': product,
                 'PRICE': price,
                 'STOCK': stock,
+                'OWNER': cookie_username,
             }])
 
             df = pd.concat([df, new_row], ignore_index=True)
@@ -211,13 +231,18 @@ def add():
         cls()
 
 def supr():
+    if cookie_username == '':
+        input("You are not log in.\n\nEnter to continue...")
+        return
     file_path = 'data.csv'
     df = pd.read_csv(file_path, encoding='utf-8')
+    df = df[df['OWNER'] == cookie_username]
     colonne = 'OBJECT'
     cls()
     logo()
     print("Aperçu des données :\n\n", df)
     x = int(input("\n\nEnter the number of the product you want to remove : "))
+    df = pd.read_csv(file_path, encoding='utf-8')
     product = df.iloc[x][colonne]
     df = df.drop(index=x)
     df.to_csv(file_path, index=False, encoding='utf-8')
@@ -227,6 +252,9 @@ def supr():
     input("\n\nEnter to continue...")
 
 def recherche():
+    if cookie_username == '':
+        input("You are not log in.\n\nEnter to continue...")
+        return
     cls()
     logo()
     file_path = 'data.csv'
@@ -248,6 +276,10 @@ def recherche():
     product = object_found.iloc[0]['OBJECT']
     price = object_found.iloc[0]['PRICE']
     stock = object_found.iloc[0]['STOCK']
+    owner = object_found.iloc[0]['OWNER']
+    if owner != cookie_username:
+        input("Product not found, sorry.\n\nEnter to continue...")
+        return
     print("Product name : ", product, "\nPrice : ", price, "$\nStock : ", stock)
     input("\n\nEnter to continue")
 
