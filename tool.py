@@ -5,6 +5,8 @@ import secrets
 import smtplib
 from email.message import EmailMessage
 import re
+from pwned import pwned
+#import pwned
 
 #Tools
 def cls():
@@ -58,8 +60,7 @@ def lect():
     if cookie_username == '':
         input("You are not log in.\n\nEnter to continue...")
         return
-    file_path = 'data.csv'
-    df = pd.read_csv(file_path, encoding='utf-8')
+    df = pd.read_csv('data.csv', encoding='utf-8')
     data_len = len(df)
     for i in range(data_len):
         if df.iloc[i]['OWNER'] == cookie_username:
@@ -77,8 +78,7 @@ def tri():
     if cookie_username == '':
         input("You are not log in.\n\nEnter to continue...")
         return
-    file_path = 'data.csv'
-    df = pd.read_csv(file_path, encoding='utf-8')
+    df = pd.read_csv('data.csv', encoding='utf-8')
     print("How do you want to sort the items ?\n1: By price\n2: By stock")
     choice = input("\n\nEnter your choice (1 or 2): ")
 
@@ -340,11 +340,7 @@ def list_user():
     input("\n\nEnter to continue...")
 
 def register():
-    #Load the csv
-    file_path = 'users.csv'
-    df = pd.read_csv(file_path, encoding='utf-8')
-
-    #Empty value for the user
+    df = pd.read_csv('users.csv', encoding='utf-8')
     username = ''
     password = ''
     description = ''
@@ -370,15 +366,22 @@ def register():
         for i in range(nb_rows):
             verif = leaks.iloc[i]['PASSWORD']
             if verif == password:
-                rep = input("The password is present on web leaks. Choose a better password, more info here :\nhttps://www.cisa.gov/secure-our-world/use-strong-passwords .\n\nDo you want to force this password ? (y or else) : ")
-                if rep == "y":
-                    password = password
-                else :
-                    password = ''
-            else:
-                salt = secrets.token_hex(16)
-                password_salted = salt+password
-                hashpassword = hashlib.sha512(password_salted.encode()).hexdigest()
+                check = "leak"
+            else :
+                check = "ok"
+
+        pwned(password)
+         #récupérer log pour savoir si leak ou pas
+        if check == "leak" or found == True:   
+            rep = input("The password is present on web leaks. Choose a better password, more info here :\nhttps://www.cisa.gov/secure-our-world/use-strong-passwords .\n\nDo you want to force this password ? (y or else) : ")
+            if rep == "y":
+                password = password
+            else :
+                password = ''
+        if password != '':
+            salt = secrets.token_hex(16)
+            password_salted = salt+password
+            hashpassword = hashlib.sha512(password_salted.encode()).hexdigest()
 
     while description == '':
         cls()
