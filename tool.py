@@ -7,6 +7,8 @@ from email.message import EmailMessage
 import re
 from pwned import pwned
 from pwned import pwned_description
+from PyQt5.QtGui import *
+from PyQt5.QtCore import *
 
 #Tools
 def cls():
