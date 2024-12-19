@@ -6,7 +6,7 @@ import smtplib
 from email.message import EmailMessage
 import re
 from pwned import pwned
-#import pwned
+from pwned import pwned_description
 
 #Tools
 def cls():
@@ -288,16 +288,18 @@ def user_menu():
     while True:
         cls()
         logo()
-        print("Press 1 to log in")
-        print("Press 2 to register")
-        print("Press 3 to view account details")
-        print("Press 4 to modify account details")
-        print("Press 5 to delete account")
-        print("Press 6 to log out")
+        if cookie_username == '':
+            print("Press 1 to log in")
+            print("Press 2 to register")
+        elif cookie_username != '':
+            print("Press 3 to view account details")
+            print("Press 4 to modify account details")
+            print("Press 5 to delete account")
+            print("Press 6 to log out")
+            print("Press 7 to go to costumer menu")
         if cookie_username == "Admin":
-            print("Press 7 to check password leaks for all users")
-        if cookie_username == "Admin":
-            print("Press 8 to list all users")
+            print("Press 8 to check password leaks for all users")
+            print("Press 9 to list all users")
         print("Press q to quit")
         
         choice = input("\nEnter your choice: ")
@@ -317,17 +319,19 @@ def user_menu():
             login()
         elif x == 2:
             register()
-        elif x == 3:
+        elif x == 3 and cookie_username != '':
             account_det()
-        elif x == 4:
+        elif x == 4 and cookie_username != '':
             user_modif()
-        elif x == 5:
+        elif x == 5 and cookie_username != '':
             user_del()
-        elif x == 6:
+        elif x == 6 and cookie_username != '':
             logout()
-        elif x == 7 and cookie_username == "Admin":
-            leaks_to_email()
+        elif x == 7 and cookie_username != '':
+            main_menu()
         elif x == 8 and cookie_username == "Admin":
+            leaks_to_email()
+        elif x == 9 and cookie_username == "Admin":
             list_user()
         else:
             print("Invalid option. Please select a valid choice.")
@@ -363,17 +367,16 @@ def register():
         leaks = pd.read_csv('leaks.csv', encoding='utf-8')
         nb_rows = len(leaks)
         password = input("Enter your password : ")
+        check = "ok"
+
         for i in range(nb_rows):
             verif = leaks.iloc[i]['PASSWORD']
             if verif == password:
                 check = "leak"
-            else :
-                check = "ok"
 
-        pwned(password)
-         #récupérer log pour savoir si leak ou pas
-        if check == "leak" or found == True:   
-            rep = input("The password is present on web leaks. Choose a better password, more info here :\nhttps://www.cisa.gov/secure-our-world/use-strong-passwords .\n\nDo you want to force this password ? (y or else) : ")
+        if check == "leak" or pwned(password):
+            pwned_description(password) 
+            rep = input("\nThe password is present on web leaks. Choose a better password, more info here :\nhttps://www.cisa.gov/secure-our-world/use-strong-passwords .\n\nDo you want to force this password ? (y or else) : ")
             if rep == "y":
                 password = password
             else :
@@ -601,6 +604,7 @@ def leaks_to_email():
     users = pd.read_csv('users.csv', encoding='utf-8')
     leaks_rows = len(leaks)
     users_rows = len(users)
+    check = "ok"
     for i in range(users_rows):
         for j in range(leaks_rows):
             verif = leaks.iloc[j]['PASSWORD']
@@ -610,27 +614,31 @@ def leaks_to_email():
             salt = users.iloc[i]['SALT']
             verif = salt+verif
             verif = hashlib.sha512(verif.encode()).hexdigest()
-            if verif == password:
-                # Configuration
-                admin_email = 'contact@zibraltar.fr'
-                email_password = 'z3qlPzjkqWh9IPVLjh821w'
-                to_email = email
-                subject = 'Security Alert'
-                body = f"Hello {user},\nYour password has leaked on the internet!\nYou need to change it now."
+            if verif == password and check == "ok":
+                check = "fail"
+        
+        password = users.iloc[i]['PASSWORD']
+        if check == "fail" or pwned(password):
+            # Configuration
+            admin_email = 'contact@zibraltar.fr'
+            email_password = 'z3qlPzjkqWh9IPVLjh821w'
+            to_email = email
+            subject = 'Security Alert'
+            body = f"Hello {user},\nYour password has leaked on the internet!\nYou need to change it now."
 
-                # Création du message
-                msg = EmailMessage()
-                msg['From'] = admin_email
-                msg['To'] = to_email
-                msg['Subject'] = subject
-                msg.set_content(body)
+            # Création du message
+            msg = EmailMessage()
+            msg['From'] = admin_email
+            msg['To'] = to_email
+            msg['Subject'] = subject
+            msg.set_content(body)
 
-                # Envoi de l'email
-                server = smtplib.SMTP('127.0.0.1', 1025)
-                server.starttls()
-                server.login(admin_email, email_password)
-                server.send_message(msg)
-                server.quit()
+            # Envoi de l'email
+            server = smtplib.SMTP('127.0.0.1', 1025)
+            server.starttls()
+            server.login(admin_email, email_password)
+            server.send_message(msg)
+            server.quit()
     cls()
     logo()
     input("Password check finish, enter to continue...")
@@ -640,4 +648,4 @@ def is_valid_email(email):
     return re.match(email_regex, email) is not None
 
 cookie_username = ''
-main_menu()
+user_menu()
