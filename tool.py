@@ -59,9 +59,6 @@ def main_menu():
 def lect(): 
     cls()
     logo()
-    if cookie_username == '':
-        input("You are not log in.\n\nEnter to continue...")
-        return
     df = pd.read_csv('data.csv', encoding='utf-8')
     data_len = len(df)
     for i in range(data_len):
@@ -75,46 +72,41 @@ def lect():
     input("\n\nEnter to continue...")
 
 def tri():
-    cls()
-    logo()
-    if cookie_username == '':
-        input("You are not log in.\n\nEnter to continue...")
-        return
-    df = pd.read_csv('data.csv', encoding='utf-8')
-    print("How do you want to sort the items ?\n1: By price\n2: By stock")
-    choice = input("\n\nEnter your choice (1 or 2): ")
-
-    if choice == "1":
-        df = df[df['OWNER'] == cookie_username]
-        df = df.sort_values(by='PRICE', ascending=True)
+    while choice == "":
         cls()
         logo()
-        print("Données triées par prix :\n\n", df)
-        input("\n\nEnter to continue...")
+        df = pd.read_csv('data.csv', encoding='utf-8')
+        print("How do you want to sort the items ?\n1: By price\n2: By stock\nExit : q")
+        choice = input("\n\nEnter your choice (1 or 2): ")
 
-    elif choice == "2":
-        df = df[df['OWNER'] == cookie_username]
-        df = df.sort_values(by='STOCK', ascending=True)
-        cls()
-        logo()
-        print("Données triées par prix :\n\n", df)
-        input("\n\nEnter to continue...")
+        if choice == "1":
+            df = df[df['OWNER'] == cookie_username]
+            df = df.sort_values(by='PRICE', ascending=True)
+            cls()
+            logo()
+            print("Données triées par prix :\n\n", df)
+            input("\n\nEnter to continue...")
 
-    else :
-        cls()
-        logo()
-        print("Bad choice !")
-        input("\n\nEnter to continue...")
+        elif choice == "2":
+            df = df[df['OWNER'] == cookie_username]
+            df = df.sort_values(by='STOCK', ascending=True)
+            cls()
+            logo()
+            print("Données triées par prix :\n\n", df)
+            input("\n\nEnter to continue...")
+    
+        elif choice == "q":
+            break
+
+        else :
+            cls()
+            logo()
+            print("Bad choice !")
+            input("\n\nEnter to continue...")
+            choice == ""
 
 def add():
-    if cookie_username == '':
-        input("You are not log in.\n\nEnter to continue...")
-        return
-    #Load the csv
-    file_path = 'data.csv'
-    df = pd.read_csv(file_path, encoding='utf-8')
-
-    #Empty value for the user
+    df = pd.read_csv('data.csv', encoding='utf-8')
     product = ''
     price = ''
     stock = ''
@@ -134,32 +126,34 @@ def add():
         cls()
         logo()
         price = input("Enter product's price : ")
+        if not price.isdigit():
+            cls()
+            logo()
+            price = ''
+            input("Enter a number please.\n\nEnter to continue...")
 
     while stock == '':
         cls()
         logo()
         stock = input("Enter the stock of this product : ")
-        if stock == "0":
+        if not stock.isdigit():
+            cls()
+            logo()
+            stock = ''
+            input("Enter a number please.\n\nEnter to continue...")
+        elif stock == "0":
             stock = "Out of stock !"
 
     cls()
     logo()
-    print("Résumé (a traduire) :\n")
+    print("Summary :\n")
     print("Product name : ", product, "\nPrice : ", price, "$\nStock : ", stock)
     
     while True:
-        entry = input("\nThis is correct ? (y/n/q) : ")
-        if entry == "q":
-            break
+        entry = input("\nThis is correct ? (y/n) : ")            
 
-        elif entry == "y":
-            file_path = 'data.csv'
-
-            try:
-                df = pd.read_csv(file_path, encoding='utf-8')
-            except FileNotFoundError:
-                df = pd.DataFrame(columns=['OBJECT', 'PRICE', 'STOCK'])
-
+        if entry == "y":
+            df = pd.read_csv('data.csv', encoding='utf-8')
             new_row = pd.DataFrame([{
                 'OBJECT': product,
                 'PRICE': price,
@@ -169,7 +163,7 @@ def add():
 
             df = pd.concat([df, new_row], ignore_index=True)
 
-            df.to_csv(file_path, index=False, encoding='utf-8')
+            df.to_csv('data.csv', index=False, encoding='utf-8')
             cls()
             logo()
             print("Product saved successfully.")
@@ -177,95 +171,31 @@ def add():
             break
 
         elif entry == "n":
-            main_menu()
+            break
         else:
             print("Type y for yes, n for no and modify, or q to return to user menu.")
 
-
-    cls()
-    with open('data.txt', 'r', encoding='utf-8') as f:
-        lignes = f.readlines()
-
-    print("Current entries:")
-    for i, line in enumerate(lignes, start=1):
-        print(f"{i}: {line.strip()}")
-    print("q : Return to main menu.")
-
-    try:
-        line_number = int(input("Enter the number of the line to delete: "))
-        if 1 <= line_number <= len(lignes):
-            # Supprimer la ligne choisie
-            lignes.pop(line_number - 1)
-
-            # Réécrire le fichier sans ligne vide à la fin
-            with open('data.txt', 'w', encoding='utf-8') as f:
-                # Réécrire les lignes en s'assurant que le dernier élément n'a pas de saut de ligne supplémentaire
-                f.write('\n'.join(line.strip() for line in lignes))
-
-            print("Line deleted successfully.")
-            print("-------------------------")
-        elif line_number == str("q"):
-            main_menu()
-        else:
-            print("Invalid line number.")
-            print("-------------------------")
-    except ValueError:
-        print("Please enter a valid number.")
-        print("-------------------------")
-
-
-    with open('data.txt', encoding='utf-8') as f:
-        data = f.read()
-        datas = data.split('\n')
-        cls()
-        search = str(input("Enter object name : "))
-        for produit in datas:
-            infos = produit.split(',')
-            produit = infos[0]
-            prix = infos[1]
-            description = infos[2]
-            if search == produit :
-                print("Nom :", produit)
-                print("Prix :", prix, "euro")
-                print("Stock :", description)
-                print("-------------------------")
-        input("Enter to continue...")
-        cls()
-
 def supr():
-    if cookie_username == '':
-        input("You are not log in.\n\nEnter to continue...")
-        return
-    file_path = 'data.csv'
-    df = pd.read_csv(file_path, encoding='utf-8')
+    df = pd.read_csv('data.csv', encoding='utf-8')
     df = df[df['OWNER'] == cookie_username]
     colonne = 'OBJECT'
     cls()
     logo()
     print("Aperçu des données :\n\n", df)
     x = int(input("\n\nEnter the number of the product you want to remove : "))
-    df = pd.read_csv(file_path, encoding='utf-8')
+    df = pd.read_csv('data.csv', encoding='utf-8')
     product = df.iloc[x][colonne]
     df = df.drop(index=x)
-    df.to_csv(file_path, index=False, encoding='utf-8')
+    df.to_csv('data.csv', index=False, encoding='utf-8')
     cls()
     logo()
     print(product,"has been successfully deleted.")
     input("\n\nEnter to continue...")
 
 def recherche():
-    if cookie_username == '':
-        input("You are not log in.\n\nEnter to continue...")
-        return
     cls()
     logo()
-    file_path = 'data.csv'
-    try:
-        df = pd.read_csv(file_path, encoding='utf-8')
-    except Exception as e:
-        print("Erreur lors du chargement du fichier CSV :", e)
-        input("\n\nEnter to continue...")
-        return
+    df = pd.read_csv('data.csv', encoding='utf-8')
     search = input("Enter the product name : ")
     object_found = df[df['OBJECT'] == search]
     if object_found.empty:
@@ -342,6 +272,8 @@ def list_user():
     cls()
     logo()
     database = pd.read_csv('users.csv')
+    pd.set_option('display.max_columns', None)
+    pd.set_option('display.max_rows', None)
     print(database)
     input("\n\nEnter to continue...")
 
@@ -413,7 +345,7 @@ def register():
 
     cls()
     logo()
-    print("Résumé (a traduire) :\n")
+    print("Summary :\n")
     print("Username : ", username, "\nPassword : ", password, "\nDescription : ", description, "\nEmail : ", mail)
     
     while True:
@@ -422,13 +354,7 @@ def register():
             break
 
         elif entry == "y":
-            file_path = 'users.csv'
-
-            try:
-                df = pd.read_csv(file_path, encoding='utf-8')
-            except FileNotFoundError:
-                df = pd.DataFrame(columns=['USERNAME', 'PASSWORD','SALT', 'DESCRIPTION', 'MAIL'])
-
+            df = pd.read_csv('users.csv', encoding='utf-8')
             new_row = pd.DataFrame([{
                 'USERNAME': username,
                 'PASSWORD': hashpassword,
@@ -439,11 +365,16 @@ def register():
 
             df = pd.concat([df, new_row], ignore_index=True)
 
-            df.to_csv(file_path, index=False, encoding='utf-8')
+            df.to_csv('users.csv', index=False, encoding='utf-8')
             cls()
             logo()
             print("Account saved successfully.")
             input("\n\nPress Enter to continue...")
+            if rep == "y":
+                cls()
+                logo()
+                print("Please, wait a few seconde.")
+                email_send(mail, username)
             break
 
         elif entry == "n":
@@ -455,21 +386,14 @@ def login():
     global cookie_username
     cls()
     logo()
-    file_path = 'users.csv'
     username = input("Enter your username: ")
     cls()
     logo()    
-
-    try:
-        df = pd.read_csv(file_path, encoding='utf-8')
-    except FileNotFoundError:
-        print("User database not found!")
-        return
-
+    df = pd.read_csv('users.csv', encoding='utf-8')
     user_found = df[df['USERNAME'] == username]
 
     if user_found.empty:
-        print("Username not found!")
+        input("Username not found!\n\nEnter to continue...")
         return
 
     password = input("Enter your password: ")
@@ -487,15 +411,8 @@ def login():
         print("Incorrect password!")
         input("Enter to continue...")
 
-def account_det():
-    file_path = 'users.csv'
-    
-    try:
-        df = pd.read_csv(file_path, encoding='utf-8')
-    except FileNotFoundError:
-        print("User database not found!")
-        return
-
+def account_det():    
+    df = pd.read_csv('users.csv', encoding='utf-8')
     user_found = df[df['USERNAME'] == cookie_username]
 
     if user_found.empty:
@@ -516,18 +433,17 @@ def account_det():
     input("\n\nPress Enter to continue...")
 
 def user_del():
-    file_path = 'users.csv'
-    df = pd.read_csv(file_path, encoding='utf-8')
+    df = pd.read_csv('users.csv', encoding='utf-8')
     df = df[df['USERNAME'] != cookie_username]
-    df.to_csv(file_path, index=False, encoding='utf-8')
+    df.to_csv('users.csv', index=False, encoding='utf-8')
     cls()
     logo()
     print(f"User '{cookie_username}' has been successfully deleted.")
+    cookie_username = ''
     input("\n\nEnter to continue...")
 
 def user_modif():
-    file_path = 'users.csv'
-    df = pd.read_csv(file_path, encoding='utf-8')
+    df = pd.read_csv('users.csv', encoding='utf-8')
     if cookie_username == '':
         cls()
         logo()
@@ -556,18 +472,43 @@ def user_modif():
             continue
 
         if x == 1:
-            jsp = "USERNAME"
+            select = "USERNAME"
             phrase = "username : "
         elif x == 2:
             cls()
             logo()
-            password = input("Enter your password : ")
+            password = ''
+            while password == '':
+                cls()
+                logo()
+                leaks = pd.read_csv('leaks.csv', encoding='utf-8')
+                nb_rows = len(leaks)
+                password = input("Enter your password : ")
+                check = "ok"
+
+                for i in range(nb_rows):
+                    verif = leaks.iloc[i]['PASSWORD']
+                    if verif == password:
+                        check = "leak"
+
+                if check == "leak" or pwned(password):
+                    pwned_description(password) 
+                    rep = input("\nThe password is present on web leaks. Choose a better password, more info here :\nhttps://www.cisa.gov/secure-our-world/use-strong-passwords .\n\nDo you want to force this password ? (y or else) : ")
+                    if rep == "y":
+                        password = password
+                    else :
+                        password = ''
+                if password != '':
+                    salt = secrets.token_hex(16)
+                    password_salted = salt+password
+                    hashpassword = hashlib.sha512(password_salted.encode()).hexdigest()
+
             salt = secrets.token_hex(16)
             password_salted = salt+password
             hashpassword = hashlib.sha512(password_salted.encode()).hexdigest()
             df.loc[df['USERNAME'] == cookie_username, 'PASSWORD'] = hashpassword
             df.loc[df['USERNAME'] == cookie_username, 'SALT'] = salt
-            df.to_csv(file_path, index=False, encoding='utf-8')
+            df.to_csv('users.csv', index=False, encoding='utf-8')
             cls()
             logo()
             print("Account updated successfully!")
@@ -575,10 +516,10 @@ def user_modif():
             break
 
         elif x == 3:
-            jsp = "DESCRIPTION"
+            select = "DESCRIPTION"
             phrase = "description : "
         elif x == 4:
-            jsp = "MAIL"
+            select = "MAIL"
             phrase = "Email : "
         else:
             print("Invalid option. Please select a valid choice.")
@@ -586,9 +527,9 @@ def user_modif():
         modif = ''
         while modif == '':
             modif = input("Enter the new " + phrase)
-            df.loc[df['USERNAME'] == cookie_username, jsp] = modif
+            df.loc[df['USERNAME'] == cookie_username, select] = modif
 
-        df.to_csv(file_path, index=False, encoding='utf-8')
+        df.to_csv('users.csv', index=False, encoding='utf-8')
         print("Account updated successfully!")
 
 def logout():
@@ -621,26 +562,7 @@ def leaks_to_email():
         
         password = users.iloc[i]['PASSWORD']
         if check == "fail" or pwned(password):
-            # Configuration
-            admin_email = 'contact@zibraltar.fr'
-            email_password = 'z3qlPzjkqWh9IPVLjh821w'
-            to_email = email
-            subject = 'Security Alert'
-            body = f"Hello {user},\nYour password has leaked on the internet!\nYou need to change it now."
-
-            # Création du message
-            msg = EmailMessage()
-            msg['From'] = admin_email
-            msg['To'] = to_email
-            msg['Subject'] = subject
-            msg.set_content(body)
-
-            # Envoi de l'email
-            server = smtplib.SMTP('127.0.0.1', 1025)
-            server.starttls()
-            server.login(admin_email, email_password)
-            server.send_message(msg)
-            server.quit()
+            email_send(email, user)
     cls()
     logo()
     input("Password check finish, enter to continue...")
@@ -649,5 +571,49 @@ def is_valid_email(email):
     email_regex = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
     return re.match(email_regex, email) is not None
 
+def email_send(email, user):
+    # Configuration
+    admin_email = 'contact@zibraltar.fr'
+    email_password = 'z3qlPzjkqWh9IPVLjh821w'
+    to_email = email
+    subject = 'Security Alert'
+    body = f"Hello {user},\nYour password has leaked on the internet!\nYou need to change it now if you want to have a better security for your account.\nYou can visit this web site to see how to create a good password : https://www.cisa.gov/secure-our-world/use-strong-passwords\nThank you for using our tool\nHave a good day !"
+
+    # Création du message
+    msg = EmailMessage()
+    msg['From'] = admin_email
+    msg['To'] = to_email
+    msg['Subject'] = subject
+    msg.set_content(body)
+
+    # Envoi de l'email
+    server = smtplib.SMTP('127.0.0.1', 1025)
+    server.starttls()
+    server.login(admin_email, email_password)
+    server.send_message(msg)
+    server.quit()
+
+global cookie_username
 cookie_username = ''
+
+try:
+    df = pd.read_csv('data.csv', encoding='utf-8')
+except FileNotFoundError:
+    df = pd.DataFrame(columns=['OBJECT', 'PRICE', 'STOCK', 'OWNER'])
+    df.to_csv('data.csv', index=False, encoding='utf-8')
+
+try:
+    df = pd.read_csv('users.csv', encoding='utf-8')
+except FileNotFoundError:
+    df = pd.DataFrame(columns=['USERNAME', 'PASSWORD', 'SALT', 'DESCRIPTION', 'MAIL'])
+    df.to_csv('users.csv', index=False, encoding='utf-8')
+
+try:
+    with open("pwned.log", "r") as log_file:
+        pass
+except FileNotFoundError:
+    with open("pwned.log", "w") as log_file:
+        log_file.write("")
+
+
 user_menu()
