@@ -124,7 +124,7 @@ def add():
         cls()
         logo()
         price = input("Enter product's price : ")
-        if not stock.isdigit():
+        if not price.isdigit():
             cls()
             logo()
             price = ''
@@ -270,6 +270,8 @@ def list_user():
     cls()
     logo()
     database = pd.read_csv('users.csv')
+    pd.set_option('display.max_columns', None)
+    pd.set_option('display.max_rows', None)
     print(database)
     input("\n\nEnter to continue...")
 
@@ -341,7 +343,7 @@ def register():
 
     cls()
     logo()
-    print("Résumé (a traduire) :\n")
+    print("Summary :\n")
     print("Username : ", username, "\nPassword : ", password, "\nDescription : ", description, "\nEmail : ", mail)
     
     while True:
@@ -350,11 +352,7 @@ def register():
             break
 
         elif entry == "y":
-            try:
-                df = pd.read_csv('users.csv', encoding='utf-8')
-            except FileNotFoundError:
-                df = pd.DataFrame(columns=['USERNAME', 'PASSWORD','SALT', 'DESCRIPTION', 'MAIL'])
-
+            df = pd.read_csv('users.csv', encoding='utf-8')
             new_row = pd.DataFrame([{
                 'USERNAME': username,
                 'PASSWORD': hashpassword,
@@ -370,6 +368,11 @@ def register():
             logo()
             print("Account saved successfully.")
             input("\n\nPress Enter to continue...")
+            if rep == "y":
+                cls()
+                logo()
+                print("Please, wait a few seconde.")
+                email_send(mail, username)
             break
 
         elif entry == "n":
@@ -388,7 +391,7 @@ def login():
     user_found = df[df['USERNAME'] == username]
 
     if user_found.empty:
-        print("Username not found!")
+        input("Username not found!\n\nEnter to continue...")
         return
 
     password = input("Enter your password: ")
@@ -467,12 +470,37 @@ def user_modif():
             continue
 
         if x == 1:
-            jsp = "USERNAME"
+            select = "USERNAME"
             phrase = "username : "
         elif x == 2:
             cls()
             logo()
-            password = input("Enter your password : ")
+            password = ''
+            while password == '':
+                cls()
+                logo()
+                leaks = pd.read_csv('leaks.csv', encoding='utf-8')
+                nb_rows = len(leaks)
+                password = input("Enter your password : ")
+                check = "ok"
+
+                for i in range(nb_rows):
+                    verif = leaks.iloc[i]['PASSWORD']
+                    if verif == password:
+                        check = "leak"
+
+                if check == "leak" or pwned(password):
+                    pwned_description(password) 
+                    rep = input("\nThe password is present on web leaks. Choose a better password, more info here :\nhttps://www.cisa.gov/secure-our-world/use-strong-passwords .\n\nDo you want to force this password ? (y or else) : ")
+                    if rep == "y":
+                        password = password
+                    else :
+                        password = ''
+                if password != '':
+                    salt = secrets.token_hex(16)
+                    password_salted = salt+password
+                    hashpassword = hashlib.sha512(password_salted.encode()).hexdigest()
+
             salt = secrets.token_hex(16)
             password_salted = salt+password
             hashpassword = hashlib.sha512(password_salted.encode()).hexdigest()
@@ -486,10 +514,10 @@ def user_modif():
             break
 
         elif x == 3:
-            jsp = "DESCRIPTION"
+            select = "DESCRIPTION"
             phrase = "description : "
         elif x == 4:
-            jsp = "MAIL"
+            select = "MAIL"
             phrase = "Email : "
         else:
             print("Invalid option. Please select a valid choice.")
@@ -497,7 +525,7 @@ def user_modif():
         modif = ''
         while modif == '':
             modif = input("Enter the new " + phrase)
-            df.loc[df['USERNAME'] == cookie_username, jsp] = modif
+            df.loc[df['USERNAME'] == cookie_username, select] = modif
 
         df.to_csv('users.csv', index=False, encoding='utf-8')
         print("Account updated successfully!")
@@ -505,6 +533,7 @@ def user_modif():
 def logout():
     cls()
     logo()
+    global cookie_username
     input(f"You have been log out of {cookie_username}.\n\nEnter to continue...")
     cookie_username = ''
 
@@ -531,26 +560,7 @@ def leaks_to_email():
         
         password = users.iloc[i]['PASSWORD']
         if check == "fail" or pwned(password):
-            # Configuration
-            admin_email = 'contact@zibraltar.fr'
-            email_password = 'z3qlPzjkqWh9IPVLjh821w'
-            to_email = email
-            subject = 'Security Alert'
-            body = f"Hello {user},\nYour password has leaked on the internet!\nYou need to change it now."
-
-            # Création du message
-            msg = EmailMessage()
-            msg['From'] = admin_email
-            msg['To'] = to_email
-            msg['Subject'] = subject
-            msg.set_content(body)
-
-            # Envoi de l'email
-            server = smtplib.SMTP('127.0.0.1', 1025)
-            server.starttls()
-            server.login(admin_email, email_password)
-            server.send_message(msg)
-            server.quit()
+            email_send(email, user)
     cls()
     logo()
     input("Password check finish, enter to continue...")
@@ -558,6 +568,28 @@ def leaks_to_email():
 def is_valid_email(email):
     email_regex = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
     return re.match(email_regex, email) is not None
+
+def email_send(email, user):
+    # Configuration
+    admin_email = 'contact@zibraltar.fr'
+    email_password = 'z3qlPzjkqWh9IPVLjh821w'
+    to_email = email
+    subject = 'Security Alert'
+    body = f"Hello {user},\nYour password has leaked on the internet!\nYou need to change it now if you want to have a better security for your account.\nYou can visit this web site to see how to create a good password : https://www.cisa.gov/secure-our-world/use-strong-passwords\nThank you for using our tool\nHave a good day !"
+
+    # Création du message
+    msg = EmailMessage()
+    msg['From'] = admin_email
+    msg['To'] = to_email
+    msg['Subject'] = subject
+    msg.set_content(body)
+
+    # Envoi de l'email
+    server = smtplib.SMTP('127.0.0.1', 1025)
+    server.starttls()
+    server.login(admin_email, email_password)
+    server.send_message(msg)
+    server.quit()
 
 global cookie_username
 cookie_username = ''
@@ -568,12 +600,18 @@ except FileNotFoundError:
     df = pd.DataFrame(columns=['OBJECT', 'PRICE', 'STOCK', 'OWNER'])
     df.to_csv('data.csv', index=False, encoding='utf-8')
 
-
 try:
     df = pd.read_csv('users.csv', encoding='utf-8')
 except FileNotFoundError:
     df = pd.DataFrame(columns=['USERNAME', 'PASSWORD', 'SALT', 'DESCRIPTION', 'MAIL'])
     df.to_csv('users.csv', index=False, encoding='utf-8')
+
+try:
+    with open("pwned.log", "r") as log_file:
+        pass
+except FileNotFoundError:
+    with open("pwned.log", "w") as log_file:
+        log_file.write("")
 
 
 user_menu()
