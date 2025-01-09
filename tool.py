@@ -7,8 +7,11 @@ from email.message import EmailMessage
 import re
 from pwned import pwned
 from pwned import pwned_description
-from PyQt5.QtGui import *
-from PyQt5.QtCore import *
+from tkinter import *
+from tkinter import messagebox
+from tkinter import simpledialog
+from tkinter import ttk
+from tkinter.ttk import Treeview, Combobox
 
 #Tools
 def cls():
@@ -17,96 +20,116 @@ def cls():
 def logo():
     print(" __________________________________________________\n|                                                  |\n|     /$$$$$$$$                  /$$               |\n|    |__  $$__/                 | $$               |\n|       | $$  /$$$$$$   /$$$$$$ | $$  /$$$$$$$     |\n|       | $$ /$$__  $$ /$$__  $$| $$ /$$_____/     |\n|       | $$| $$  \ $$| $$  \ $$| $$|  $$$$$$      |\n|       | $$| $$  | $$| $$  | $$| $$ \____  $$     |\n|       | $$|  $$$$$$/|  $$$$$$/| $$ /$$$$$$$/     |\n|       |__/ \______/  \______/ |__/|_______/      |\n|                                                  |\n'=================================================='\n\n")
 
-#Main menu
+def clear():
+    for widget in window.winfo_children():
+        widget.destroy()
+
+#Seller menu
+def tri(choice, tree, df):
+    if choice == "Per price":
+        df_filtered = df[df['OWNER'] == cookie_username]
+        df_sorted = df_filtered.sort_values(by='PRICE', ascending=True)
+    elif choice == "Per stock":
+        df_filtered = df[df['OWNER'] == cookie_username]
+        df_sorted = df_filtered.sort_values(by='STOCK', ascending=True)
+    update_treeview(tree, df_sorted)
+
+def update_treeview(tree, df):
+    for row in tree.get_children():
+        tree.delete(row)
+    for _, row in df.iterrows():
+        tree.insert("", "end", values=list(row))
+
 def main_menu():
-    while True:
-        cls()
-        logo()
-        print("Press 1 to view objects")
-        print("Press 2 to view objects with filters")
-        print("Press 3 to add objects")
-        print("Press 4 to delete objects")
-        print("Press 5 to find objects")
-        print("Press 6 to access user's menu")
-        print("Press q to quit")
+    clear()
+    window.title("Seller menu")
+    window.config(background='white')
+    window.minsize(500, 350)
 
-        x = input("\nEnter your choice: ")
-
-        if x == "q":
-            print("Exiting the menu. Goodbye!")
-            break
-        try:
-            x = int(x)
-        except ValueError:
-            print("Invalid input! Please enter a number.")
-            continue
-
-        if x == 1:
-            lect()
-        elif x == 2:
-            tri()
-        elif x == 3:
-            add()
-        elif x == 4:
-            supr()
-        elif x == 5:
-            recherche()
-        elif x == 6:
-            user_menu()
-        else:
-            print("Invalid option. Please select a valid choice.")
-
-def lect(): 
-    cls()
-    logo()
     df = pd.read_csv('data.csv', encoding='utf-8')
-    data_len = len(df)
-    for i in range(data_len):
-        if df.iloc[i]['OWNER'] == cookie_username:
-            product = df.iloc[i]['OBJECT']
-            price = df.iloc[i]['PRICE']
-            stock = df.iloc[i]['STOCK']
-            print(f"\nProduct : {product}\nPrice : {price}\nStock : {stock}")
-            print("\n=======================================")
+    column_names = ['OBJECT', 'PRICE', 'STOCK', 'OWNER']
+    tree = Treeview(window, columns=column_names, show='headings')
 
-    input("\n\nEnter to continue...")
+    tri("Per stock", tree, df)
 
-def tri():
-    while choice == "":
-        cls()
-        logo()
-        df = pd.read_csv('data.csv', encoding='utf-8')
-        print("How do you want to sort the items ?\n1: By price\n2: By stock\nExit : q")
-        choice = input("\n\nEnter your choice (1 or 2): ")
+    for col in column_names:
+        tree.heading(col, text=col)
+        tree.column(col, width=100)
 
-        if choice == "1":
-            df = df[df['OWNER'] == cookie_username]
-            df = df.sort_values(by='PRICE', ascending=True)
-            cls()
-            logo()
-            print("Données triées par prix :\n\n", df)
-            input("\n\nEnter to continue...")
+    tree.pack()
 
-        elif choice == "2":
-            df = df[df['OWNER'] == cookie_username]
-            df = df.sort_values(by='STOCK', ascending=True)
-            cls()
-            logo()
-            print("Données triées par prix :\n\n", df)
-            input("\n\nEnter to continue...")
-    
-        elif choice == "q":
-            break
+    add_btn = Button(window, text="Add", command=add)
+    add_btn.pack()
+    del_btn = Button(window, text="Delete", command=lambda: supr(tree))
+    del_btn.pack()
+    search_btn = Button(window, text="Research", command=recherche)
+    search_btn.pack()
 
-        else :
-            cls()
-            logo()
-            print("Bad choice !")
-            input("\n\nEnter to continue...")
-            choice == ""
+    combobox = Combobox(window, values=["Per price", "Per stock"]) 
+    combobox.set("Per price")
+    combobox.pack(pady=20)
+
+    tri_btn = Button(window, text="Tri", command=lambda: tri(combobox.get(), tree, df))
+    tri_btn.pack()
+
+    window.mainloop()
 
 def add():
-    df = pd.read_csv('data.csv', encoding='utf-8')
+    clear()
+    #Config Tkinter
+    window.title("Register")
+    window.config(background='white')
+    window.minsize(300, 150)
+
+    #Tkinter object's
+    object_label = Label(window, text="Object")
+    object_label.pack()
+    object = StringVar()
+    object_entry = Entry(window, textvariable=object)
+    object_entry.pack()
+
+    price_label = Label(window, text="Price")
+    price_label.pack()
+    price = StringVar()
+    price_entry = Entry(window, textvariable=price)
+    price_entry.pack()
+
+    stock_label = Label(window, text="Stock")
+    stock_label.pack()
+    stock = StringVar()
+    stock_entry = Entry(window, textvariable=stock)
+    stock_entry.pack()
+
+
+    def add_action():
+        df = pd.read_csv('data.csv', encoding='utf-8')
+        object = object_entry.get()
+        price = price_entry.get()
+        stock = stock_entry.get()
+        new_row = pd.DataFrame([{
+            'OBJECT': object,
+            'PRICE': price,
+            'STOCK' : stock,
+            'OWNER': cookie_username,
+        }])
+
+        entry = messagebox.askquestion("validation", "Is this correct ?\n\n" f"Object name : {object}\n" f"Price : {price}\n" f"Stock : {stock}")
+            
+        if entry != "yes":
+            return
+
+        df = pd.concat([df, new_row], ignore_index=True)
+        df.to_csv('data.csv', index=False, encoding='utf-8')
+        main_menu()
+    
+    add_btn = Button(window, text="Add", command=add_action)
+    add_btn.pack()
+    exit_btn = Button(window, text="Exit", command=main_menu)
+    exit_btn.pack()
+
+
+
+    """df = pd.read_csv('data.csv', encoding='utf-8')
     product = ''
     price = ''
     stock = ''
@@ -173,100 +196,100 @@ def add():
         elif entry == "n":
             break
         else:
-            print("Type y for yes, n for no and modify, or q to return to user menu.")
+            print("Type y for yes, n for no and modify, or q to return to user menu.")"""
 
-def supr():
+def supr(tree):
+    def on_select(tree):
+        selected_items = tree.selection()
+        if not selected_items:
+            messagebox.showerror("Error", "You must select an object")
+            return None
+        selected_item = selected_items[0]
+        selected_data = tree.item(selected_item, "values")
+        return selected_data
+
+    selected_line = on_select(tree)
+    if not selected_line:
+        return
+
     df = pd.read_csv('data.csv', encoding='utf-8')
-    df = df[df['OWNER'] == cookie_username]
-    colonne = 'OBJECT'
-    cls()
-    logo()
-    print("Aperçu des données :\n\n", df)
-    x = int(input("\n\nEnter the number of the product you want to remove : "))
-    df = pd.read_csv('data.csv', encoding='utf-8')
-    product = df.iloc[x][colonne]
+    object_found = df[df['OBJECT'] == selected_line[0]]
+    if object_found.empty:
+        messagebox.showerror("Error", "Object not found")
+        return
+
+    owner = object_found.iloc[0]['OWNER']
+    if owner != cookie_username:
+        messagebox.showinfo("Error", "You are not the owner of this product")
+        return
+
+    x = object_found.index[0]
     df = df.drop(index=x)
     df.to_csv('data.csv', index=False, encoding='utf-8')
-    cls()
-    logo()
-    print(product,"has been successfully deleted.")
-    input("\n\nEnter to continue...")
+    main_menu()
 
 def recherche():
-    cls()
-    logo()
     df = pd.read_csv('data.csv', encoding='utf-8')
-    search = input("Enter the product name : ")
+    search = simpledialog.askstring("search", "Enter the product name : ")
     object_found = df[df['OBJECT'] == search]
     if object_found.empty:
-        cls()
-        logo()
-        input("Product not found, sorry.\n\nEnter to continue...")
+        messagebox.showerror("Product not found, sorry.")
         return
-    cls()
-    logo()
     product = object_found.iloc[0]['OBJECT']
     price = object_found.iloc[0]['PRICE']
     stock = object_found.iloc[0]['STOCK']
     owner = object_found.iloc[0]['OWNER']
     if owner != cookie_username:
-        input("Product not found, sorry.\n\nEnter to continue...")
+        messagebox.showerror("Product not found, sorry.")
         return
-    print("Product name : ", product, "\nPrice : ", price, "$\nStock : ", stock)
-    input("\n\nEnter to continue")
+    messagebox.showinfo("search", f"Product name : {product}\nPrice : {price}\nStock : {stock}")
 
 #User menu
 def user_menu():
     while True:
-        cls()
-        logo()
-        if cookie_username == '':
-            print("Press 1 to log in")
-            print("Press 2 to register")
-        elif cookie_username != '':
-            print("Press 3 to view account details")
-            print("Press 4 to modify account details")
-            print("Press 5 to delete account")
-            print("Press 6 to log out")
-            print("Press 7 to go to costumer menu")
-        if cookie_username == "Admin":
-            print("Press 8 to check password leaks for all users")
-            print("Press 9 to list all users")
-        print("Press q to quit")
-        
-        choice = input("\nEnter your choice: ")
-        
-        if choice == "q":
-            cls()
-            print("Exiting the menu...")
-            break
-        
-        try:
-            x = int(choice)
-        except ValueError:
-            print("Invalid input! Please enter a number or 'q' to quit.")
-            continue
+        clear()
+        #Config Tkinter
+        window.title("User Menu")
+        window.config(background='white')
+        window.minsize(300, 150)
 
-        if x == 1:
-            login()
-        elif x == 2:
-            register()
-        elif x == 3 and cookie_username != '':
-            account_det()
-        elif x == 4 and cookie_username != '':
-            user_modif()
-        elif x == 5 and cookie_username != '':
-            user_del()
-        elif x == 6 and cookie_username != '':
-            logout()
-        elif x == 7 and cookie_username != '':
-            main_menu()
-        elif x == 8 and cookie_username == "Admin":
-            leaks_to_email()
-        elif x == 9 and cookie_username == "Admin":
-            list_user()
-        else:
-            print("Invalid option. Please select a valid choice.")
+        #Tkinter object
+        title = Label(window, text="User Menu", font=("Courrier", 15), bg="white")
+        title.pack()
+
+        if cookie_username == '':
+            opt1 = Button(window, text="Log in", command=login)
+            opt1.pack()
+
+            opt2 = Button(window, text="Register", command=register)
+            opt2.pack()
+
+        elif cookie_username != '':
+
+            opt3 = Button(window, text="Account details", command=account_det)
+            opt3.pack()
+
+            opt4 = Button(window, text="Modify account", command=user_modif)
+            opt4.pack()
+ 
+            opt5 = Button(window, text="Delete account", command=user_del)
+            opt5.pack()
+
+            opt6 = Button(window, text="log out", command=logout)
+            opt6.pack()
+
+            opt7 = Button(window, text="Seller menu", command=main_menu)
+            opt7.pack()
+
+        if cookie_username == "Admin":
+ 
+            opt8 = Button(window, text="Check password", command=leaks_to_email)
+            opt8.pack()
+
+            opt9 = Button(window, text="List users", command=list_user)
+            opt9.pack() 
+
+        window.mainloop()       
 
 def list_user():
     cls()
@@ -278,266 +301,270 @@ def list_user():
     input("\n\nEnter to continue...")
 
 def register():
-    df = pd.read_csv('users.csv', encoding='utf-8')
-    username = ''
-    password = ''
-    description = ''
-    mail = ''
+    clear()
 
-    while username == '':
-        cls()
-        logo()
-        username = input("Enter your username : ")
+    #Config Tkinter
+    window.title("Register")
+    window.config(background='white')
+    window.minsize(300, 150)
+
+    #Tkinter object's
+    username_label = Label(window, text="Username")
+    username_label.pack()
+    username = StringVar()
+    username_entry = Entry(window, textvariable=username)
+    username_entry.pack()
+
+    password_label = Label(window, text="Password")
+    password_label.pack()
+    password = StringVar()
+    password_entry = Entry(window, textvariable=password, show='*')
+    password_entry.pack()
+
+    description_label = Label(window, text="Description")
+    description_label.pack()
+    description = StringVar()
+    description_entry = Entry(window, textvariable=description)
+    description_entry.pack()
+
+    mail_label = Label(window, text="Mail")
+    mail_label.pack()
+    mail = StringVar()
+    mail_entry = Entry(window, textvariable=mail)
+    mail_entry.pack()
+
+
+    def register_action():
+        df = pd.read_csv('users.csv', encoding='utf-8')
+        username = username_entry.get()
+        password = password_entry.get()
+        description = description_entry.get()
+        mail = mail_entry.get()
         verif = df[df['USERNAME'] == username]
-        if verif.empty:
-            username = username
-        else :
-            input("Username already exist, sorry.\n\nEnter to try an other one...")
-            username = ''
-
-    while password == '':
-        cls()
-        logo()
         leaks = pd.read_csv('leaks.csv', encoding='utf-8')
         nb_rows = len(leaks)
-        password = input("Enter your password : ")
         check = "ok"
+        salt = secrets.token_hex(16)
+        password_salted = salt+password
+        hashpassword = hashlib.sha512(password_salted.encode()).hexdigest()
+        new_row = pd.DataFrame([{
+            'USERNAME': username,
+            'PASSWORD': hashpassword,
+            'SALT' : salt,
+            'DESCRIPTION': description,
+            'MAIL': mail
+        }])
+        rep = ""
+
+        #Username
+        if username == '':
+            messagebox.showerror("fail", "Username cannot be empty")
+            return
+        
+        if not verif.empty:
+            messagebox.showerror("fail", "Username already exist, sorry.")
+            return
+
+        #Password
+        if password == "" or len(password) < 8 :
+            messagebox.showerror("fail", "Password must have 8 characters or more")
+            return
 
         for i in range(nb_rows):
             verif = leaks.iloc[i]['PASSWORD']
             if verif == password:
                 check = "leak"
+                break
 
         if check == "leak" or pwned(password):
-            pwned_description(password) 
-            rep = input("\nThe password is present on web leaks. Choose a better password, more info here :\nhttps://www.cisa.gov/secure-our-world/use-strong-passwords .\n\nDo you want to force this password ? (y or else) : ")
-            if rep == "y":
-                password = password
-            else :
-                password = ''
-        if password != '':
-            salt = secrets.token_hex(16)
-            password_salted = salt+password
-            hashpassword = hashlib.sha512(password_salted.encode()).hexdigest()
+            rep = messagebox.askquestion("Leak", "The password is present on web leaks. Choose a better password, more info here :\nhttps://www.cisa.gov/secure-our-world/use-strong-passwords .\n\nDo you want to force this password ?")
+            if rep != "yes":
+                return
 
-    while description == '':
-        cls()
-        logo()
-        description = input("Enter the description of this account : ")
+        #Description
         if description == '':
             description = "Nothing here !"
-        else :
-            break
+        
+        #Mail
+        if mail == '' or not is_valid_email(mail):
+            messagebox.showerror("fail","You need enter a valid email.")
+            return
+
+        entry = messagebox.askquestion("validation", "Is this correct ?\n\n" f"Username : {username}\n" f"Password : {password}\n" f"Description : {description}\n" f"Email : {mail}" )
+            
+        if entry != "yes":
+            return
+
+        df = pd.concat([df, new_row], ignore_index=True)
+        df.to_csv('users.csv', index=False, encoding='utf-8')
+        if rep == "yes":
+            messagebox.showinfo("email send","Register can take few minute")
+            email_send(mail, username)
+
+        messagebox.showinfo("success","Your account have been created.")
+        global cookie_username
+        cookie_username = username
+        user_menu()
     
-    while mail == '':
-        cls()
-        logo()
-        mail = input("Enter your email : ").strip()
-        if mail == '':
-            cls()
-            logo()
-            input("You need enter a valid email.\n\nEnter to try again...")
-        if not is_valid_email(mail):
-            cls()
-            logo()
-            mail = ''
-            input("You need to enter a valid email.\n\nPress Enter to try again...")
-
-    cls()
-    logo()
-    print("Summary :\n")
-    print("Username : ", username, "\nPassword : ", password, "\nDescription : ", description, "\nEmail : ", mail)
+    register_btn = Button(window, text="Register", command=register_action)
+    register_btn.pack()
+    exit_btn = Button(window, text="Exit", command=user_menu)
+    exit_btn.pack()
     
-    while True:
-        entry = input("\nThis is correct ? (y/n/q) : ")
-        if entry == "q":
-            break
-
-        elif entry == "y":
-            df = pd.read_csv('users.csv', encoding='utf-8')
-            new_row = pd.DataFrame([{
-                'USERNAME': username,
-                'PASSWORD': hashpassword,
-                'SALT' : salt,
-                'DESCRIPTION': description,
-                'MAIL': mail
-            }])
-
-            df = pd.concat([df, new_row], ignore_index=True)
-
-            df.to_csv('users.csv', index=False, encoding='utf-8')
-            cls()
-            logo()
-            print("Account saved successfully.")
-            input("\n\nPress Enter to continue...")
-            if rep == "y":
-                cls()
-                logo()
-                print("Please, wait a few seconde.")
-                email_send(mail, username)
-            break
-
-        elif entry == "n":
-            register()
-        else:
-            print("Type y for yes, n for no and modify, or q to return to user menu.")
-
 def login():
     global cookie_username
-    cls()
-    logo()
-    username = input("Enter your username: ")
-    cls()
-    logo()    
-    df = pd.read_csv('users.csv', encoding='utf-8')
-    user_found = df[df['USERNAME'] == username]
+    clear()
 
-    if user_found.empty:
-        input("Username not found!\n\nEnter to continue...")
-        return
+    #Config Tkinter
+    window.title("Login")
+    window.config(background='white')
+    window.minsize(300, 150)
 
-    password = input("Enter your password: ")
-    salt = user_found.iloc[0]['SALT']
-    password_salted = salt+password
-    hashpassword = hashlib.sha512(password_salted.encode()).hexdigest()
-    cls()
-    logo()
+    #Tkinter object's
+    username_label = Label(window, text="Username")
+    username_label.pack()
+    username = StringVar()
+    username_entry = Entry(window, textvariable=username)
+    username_entry.pack()
 
-    if user_found.iloc[0]['PASSWORD'] == hashpassword:
-        cookie_username = username
-        print("Login successful!")
-        input("\n\nPress Enter to continue...")
-    else:
-        print("Incorrect password!")
-        input("Enter to continue...")
+    password_label = Label(window, text="Password")
+    password_label.pack()
+    password = StringVar()
+    password_entry = Entry(window, textvariable=password, show='*')
+    password_entry.pack()
+     
+    def login_action():
+        global cookie_username
 
-def account_det():    
+        df = pd.read_csv('users.csv', encoding='utf-8')
+        user_found = df[df['USERNAME'] == username_entry.get()]
+
+        if user_found.empty:
+            messagebox.showerror("Error", "Username not found!")
+            return
+
+        salt = user_found.iloc[0]['SALT']
+        password_salted = salt+password_entry.get()
+        hashpassword = hashlib.sha512(password_salted.encode()).hexdigest()
+
+        if user_found.iloc[0]['PASSWORD'] == hashpassword:
+            cookie_username = username_entry.get()
+            user_menu()
+
+        else:
+            messagebox.showerror("Error", "Password incorrect !")
+            return
+    
+    login_btn = Button(window, text="Log in", command=login_action)
+    login_btn.pack()
+    return
+    
+def account_det():
     df = pd.read_csv('users.csv', encoding='utf-8')
     user_found = df[df['USERNAME'] == cookie_username]
-
-    if user_found.empty:
-        cls()
-        logo()
-        print("You are not log in.")
-        input("\n\nEnter to continue...")
-        return
 
     account = user_found.iloc[0]['USERNAME']
     psword = user_found.iloc[0]['PASSWORD']
     desc = user_found.iloc[0]['DESCRIPTION']
     mail = user_found.iloc[0]['MAIL']
 
-    cls()
-    logo()
-    print(f"Account : {account}\nPassword's hash : {psword}\nDescription : {desc}\nEmail : {mail}")
-    input("\n\nPress Enter to continue...")
+    messagebox.showinfo("your account", f"Account : {account}\nPassword's hash : {psword}\nDescription : {desc}\nEmail : {mail}")
 
 def user_del():
     df = pd.read_csv('users.csv', encoding='utf-8')
     df = df[df['USERNAME'] != cookie_username]
     df.to_csv('users.csv', index=False, encoding='utf-8')
-    cls()
-    logo()
-    print(f"User '{cookie_username}' has been successfully deleted.")
-    cookie_username = ''
-    input("\n\nEnter to continue...")
+    rep = messagebox.askquestion("delete", "Are you sure to delete your account ?")
+    if rep == "yes":
+        cookie_username = ''
+        messagebox.showinfo(f"User '{cookie_username}' has been successfully deleted.")
 
 def user_modif():
-    df = pd.read_csv('users.csv', encoding='utf-8')
-    if cookie_username == '':
-        cls()
-        logo()
-        print("You are not log in.")
-        input("\n\nEnter to continue...")
-        return
-    
     while True:
-        cls()
-        logo()
-        print("Press 1 to modify username")
-        print("Press 2 to modify password")
-        print("Press 3 to modify description")
-        print("Press 4 to modify email")
-        print("Press q to quit")
-        
-        choice = input("\nEnter your choice: ")
-        
-        if choice == "q":
-            break
-        
-        try:
-            x = int(choice)
-        except ValueError:
-            print("Invalid input! Please enter a number or 'q' to quit.")
-            continue
+        clear()
+        #Tkinter window
+        window.title("User Modification")
+        window.config(background='white')
+        window.minsize(300, 150)
 
-        if x == 1:
-            select = "USERNAME"
-            phrase = "username : "
-        elif x == 2:
-            cls()
-            logo()
-            password = ''
-            while password == '':
-                cls()
-                logo()
-                leaks = pd.read_csv('leaks.csv', encoding='utf-8')
-                nb_rows = len(leaks)
-                password = input("Enter your password : ")
-                check = "ok"
+        def username_modif():
+            global cookie_username
+            df = pd.read_csv('users.csv', encoding='utf-8')
+            rep = simpledialog.askstring("username", "Enter your new username :")
+            confirm = messagebox.askquestion("confirmation", f"Your new username will be : {rep}")
+            if confirm == "yes":
+                df.loc[df['USERNAME'] == cookie_username, 'USERNAME'] = rep
+                df.to_csv('users.csv', index=False, encoding='utf-8')
+                cookie_username = rep
+                
+        def password_modif():
+            df = pd.read_csv('users.csv', encoding='utf-8')
+            leaks = pd.read_csv('leaks.csv', encoding='utf-8')
+            nb_rows = len(leaks)
+            check = ""
+            password = simpledialog.askstring("password", "Enter your new password :")
+            for i in range(nb_rows):
+                verif = leaks.iloc[i]['PASSWORD']
+                if verif == password:
+                    check = "leak"
+                    break
 
-                for i in range(nb_rows):
-                    verif = leaks.iloc[i]['PASSWORD']
-                    if verif == password:
-                        check = "leak"
-
-                if check == "leak" or pwned(password):
-                    pwned_description(password) 
-                    rep = input("\nThe password is present on web leaks. Choose a better password, more info here :\nhttps://www.cisa.gov/secure-our-world/use-strong-passwords .\n\nDo you want to force this password ? (y or else) : ")
-                    if rep == "y":
-                        password = password
-                    else :
-                        password = ''
-                if password != '':
-                    salt = secrets.token_hex(16)
-                    password_salted = salt+password
-                    hashpassword = hashlib.sha512(password_salted.encode()).hexdigest()
+            if check == "leak" or pwned(password):
+                rep = messagebox.askquestion("\nThe password is present on web leaks. Choose a better password, more info here :\nhttps://www.cisa.gov/secure-our-world/use-strong-passwords .\n\nDo you want to force this password ? (y or else) : ")
+                if rep != "yes":
+                    return
 
             salt = secrets.token_hex(16)
             password_salted = salt+password
             hashpassword = hashlib.sha512(password_salted.encode()).hexdigest()
-            df.loc[df['USERNAME'] == cookie_username, 'PASSWORD'] = hashpassword
-            df.loc[df['USERNAME'] == cookie_username, 'SALT'] = salt
-            df.to_csv('users.csv', index=False, encoding='utf-8')
-            cls()
-            logo()
-            print("Account updated successfully!")
-            input("\n\nEnter to continue...")
-            break
+            confirm = messagebox.askquestion("confirmation", f"Your new password will be : {password}")
+            if confirm == "yes":
+                df.loc[df['USERNAME'] == cookie_username, 'PASSWORD'] = hashpassword
+                df.loc[df['USERNAME'] == cookie_username, 'SALT'] = salt
+                df.to_csv('users.csv', index=False, encoding='utf-8')
 
-        elif x == 3:
-            select = "DESCRIPTION"
-            phrase = "description : "
-        elif x == 4:
-            select = "MAIL"
-            phrase = "Email : "
-        else:
-            print("Invalid option. Please select a valid choice.")
+        def descr_modif():
+            df = pd.read_csv('users.csv', encoding='utf-8')
+            rep = simpledialog.askstring("description", "Enter your new description :")
+            confirm = messagebox.askquestion("confirmation", f"Your new description will be : {rep}")
+            if confirm == "yes":
+                df.loc[df['USERNAME'] == cookie_username, 'DESCRIPTION'] = rep
+                df.to_csv('users.csv', index=False, encoding='utf-8')
 
-        modif = ''
-        while modif == '':
-            modif = input("Enter the new " + phrase)
-            df.loc[df['USERNAME'] == cookie_username, select] = modif
+        def email_modif():
+            df = pd.read_csv('users.csv', encoding='utf-8')
+            rep = simpledialog.askstring("email", "Enter your new email :")
+            confirm = messagebox.askquestion("confirmation", f"Your new email will be : {rep}")
+            if confirm == "yes":
+                df.loc[df['USERNAME'] == cookie_username, 'MAIL'] = rep
+                df.to_csv('users.csv', index=False, encoding='utf-8')
 
-        df.to_csv('users.csv', index=False, encoding='utf-8')
-        print("Account updated successfully!")
+    #Tkinter object
+        title = Label(window, text="User modification", font=("Courrier", 15), bg="white")
+        title.pack()
+
+        opt3 = Button(window, text="Username", command=username_modif)
+        opt3.pack()
+
+        opt4 = Button(window, text="Password", command=password_modif)
+        opt4.pack()
+ 
+        opt5 = Button(window, text="Description", command=descr_modif)
+        opt5.pack()
+
+        opt6 = Button(window, text="Email", command=email_modif)
+        opt6.pack()
+
+        opt7 = Button(window, text="Exit", command=user_menu)
+        opt7.pack()
+
+        window.mainloop()
 
 def logout():
-    cls()
-    logo()
     global cookie_username
-    input(f"You have been log out of {cookie_username}.\n\nEnter to continue...")
+    messagebox.showinfo("logout", f"You have been log out of {cookie_username}.")
     cookie_username = ''
+    user_menu()
 
 def leaks_to_email():
     cls()
@@ -594,7 +621,7 @@ def email_send(email, user):
     server.quit()
 
 global cookie_username
-cookie_username = ''
+cookie_username = 'Admin'
 
 try:
     df = pd.read_csv('data.csv', encoding='utf-8')
@@ -615,5 +642,5 @@ except FileNotFoundError:
     with open("pwned.log", "w") as log_file:
         log_file.write("")
 
-
+window = Tk()
 user_menu()
