@@ -39,7 +39,7 @@ def main_menu():
     clear()
     window.title("Seller menu")
     window.config(background='white')
-    window.minsize(500, 350)
+    window.minsize(500, 400)
 
     df = pd.read_csv('data.csv', encoding='utf-8')
     column_names = ['OBJECT', 'PRICE', 'STOCK', 'OWNER']
@@ -756,7 +756,7 @@ def email_send(email, user):
     server.quit()
 
 global cookie_username
-cookie_username = 'Admin'
+cookie_username = ''
 
 try:
     df = pd.read_csv('data.csv', encoding='utf-8')
